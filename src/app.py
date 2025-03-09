@@ -100,36 +100,36 @@ def get_metrics():
 @app.route('/api/prediction')
 def get_prediction():
     """
-    Predicts next CPU usage based on live data. 
-    If the predicted CPU usage exceeds a threshold, we log an alert.
-    Returns JSON with predicted usage and an alert flag/message if triggered.
+    Predicts the next CPU usage based on live data.
+    If the predicted CPU usage exceeds a threshold, logs an alert.
+    Returns JSON with the predicted CPU, alert flag, and alert message.
     """
-    THRESHOLD = 80.0  # CPU usage threshold for alerts
+    # Set a low threshold for testing
+    THRESHOLD = 0.5  # Temporarily lower threshold for demonstration
+
     window_size = 10
-    
-    # Collect live CPU, memory, GPU usage
-    # For demonstration, we'll only feed CPU usage into the LSTM, but you can expand.
-    live_cpu = []
-    for _ in range(window_size):
-        live_cpu.append(psutil.cpu_percent(interval=0.3))
-    X_live = np.array(live_cpu).reshape((1, window_size, 1)).astype(np.float32)
-    
+    live_data = [psutil.cpu_percent(interval=0.3) for _ in range(window_size)]
+    X_live = np.array(live_data).reshape((1, window_size, 1)).astype(np.float32)
+
     with torch.no_grad():
-        pred_cpu_tensor = model(torch.from_numpy(X_live))
-    predicted_cpu = pred_cpu_tensor.item()
-    
+        prediction_tensor = model(torch.from_numpy(X_live))
+    predicted_cpu = prediction_tensor.item()
+
+    # Uncomment the next line to force a high prediction for testing:
+    # predicted_cpu = 85.0
+
     alert_triggered = False
     alert_message = ""
+
     if predicted_cpu > THRESHOLD:
         alert_triggered = True
         alert_message = f"High CPU usage predicted: {predicted_cpu:.2f}%"
-        # Log the alert to MongoDB
         alerts_collection.insert_one({
             "timestamp": datetime.now(),
             "message": alert_message,
             "predicted_cpu": predicted_cpu
         })
-    
+
     return jsonify({
         "timestamp": datetime.now().isoformat(),
         "predicted_cpu": predicted_cpu,
@@ -149,6 +149,45 @@ def get_alerts():
         a['timestamp'] = a['timestamp'].isoformat()
     return jsonify(recent_alerts)
 
+
+def generate_recommendations(metrics):
+    """
+    Generate performance improvement recommendations based on recent metrics.
+    :param metrics: A list of recent metric documents from MongoDB.
+    :return: A list of recommendation strings.
+    """
+    recommendations = []
+    
+    if not metrics:
+        return recommendations
+
+    # Calculate average CPU and Memory usage over recent data
+    avg_cpu = sum(doc.get('cpu', 0) for doc in metrics) / len(metrics)
+    avg_memory = sum(doc.get('memory', 0) for doc in metrics) / len(metrics)
+    
+    # Example rules:
+    if avg_cpu > 75:
+        recommendations.append("Your average CPU usage is high. Consider closing background applications or lowering in-game graphics settings.")
+    if avg_memory > 80:
+        recommendations.append("Your memory usage is high. Consider closing memory-intensive applications.")
+    # You can add more rules based on GPU or other parameters.
+    
+    return recommendations
+
+@app.route('/api/recommendations')
+def get_recommendations():
+    """
+    Endpoint that returns performance improvement recommendations based on the latest 50 metrics.
+    """
+    data = list(metrics_collection.find().sort('timestamp', -1).limit(50))
+    # Reverse to have oldest first
+    data = data[::-1]
+    # Generate recommendations based on these metrics
+    recs = generate_recommendations(data)
+    return jsonify({
+        "timestamp": datetime.now().isoformat(),
+        "recommendations": recs
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

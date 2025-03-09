@@ -141,11 +141,11 @@ async function fetchPrediction() {
     const predictedCpu = data.predicted_cpu || 0;
     const clamped = Math.max(0, Math.min(predictedCpu, 100));
 
-    // Update doughnut chart
+    // Update the doughnut chart with the predicted CPU usage
     predictionChart.data.datasets[0].data = [clamped, 100 - clamped];
     predictionChart.update();
 
-    // Check for alert
+    // Update the alert banner based on the API response
     if (data.alert_triggered) {
       alertBanner.style.display = 'block';
       alertBanner.textContent = data.alert_message;
@@ -153,7 +153,6 @@ async function fetchPrediction() {
       alertBanner.style.display = 'none';
       alertBanner.textContent = '';
     }
-
   } catch (err) {
     console.error('Error fetching prediction:', err);
   }
@@ -176,6 +175,31 @@ async function fetchAlerts() {
     console.error('Error fetching alerts:', err);
   }
 }
+
+const recommendationsList = document.getElementById('recommendationsList');
+
+async function fetchRecommendations() {
+  try {
+    const response = await fetch('/api/recommendations');
+    const data = await response.json();
+    // Clear the list
+    recommendationsList.innerHTML = '';
+    if (data.recommendations.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = "No recommendations at this time. Your system appears to be performing well!";
+      recommendationsList.appendChild(li);
+    } else {
+      data.recommendations.forEach(rec => {
+        const li = document.createElement('li');
+        li.textContent = rec;
+        recommendationsList.appendChild(li);
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching recommendations:', err);
+  }
+}
+
 
 /* -----------------------
    EVENT LISTENERS
