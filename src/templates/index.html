@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gaming Performance Analyzer Dashboard</title>
+
+  <!-- Moment.js + Chart.js + Adapter -->
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 { margin-bottom: 10px; }
+    .controls {
+      margin-bottom: 20px;
+    }
+    label { margin-right: 10px; }
+    input[type="date"] {
+      margin-right: 10px;
+    }
+    button {
+      margin-right: 20px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #charts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .chart-container {
+      width: 45%;
+      min-width: 300px;
+    }
+    #alertBanner {
+      display: none;
+      background-color: #ffdddd;
+      border: 1px solid #f44336;
+      color: #f44336;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+    #alertsList {
+      list-style: none;
+      padding-left: 0;
+    }
+    #alertsList li {
+      background-color: #ffeeee;
+      border: 1px solid #f44336;
+      margin-bottom: 5px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gaming Performance Analyzer Dashboard</h1>
+
+  <div id="alertBanner"></div>
+
+  <div class="controls">
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" />
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" />
+    <button id="applyFilterBtn">Apply Filter</button>
+    <button id="refreshAlertsBtn">Refresh Alerts</button>
+  </div>
+
+  <div id="charts">
+    <!-- Multi-Metric Line Chart -->
+    <div class="chart-container">
+      <canvas id="metricsChart"></canvas>
+    </div>
+    <!-- Prediction Chart -->
+    <div class="chart-container">
+      <canvas id="predictionChart"></canvas>
+    </div>
+  </div>
+
+  <h3>Recent Alerts</h3>
+  <ul id="alertsList"></ul>
+
+  <!-- Our custom JS -->
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
